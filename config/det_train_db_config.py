@@ -29,13 +29,15 @@ config.train_options = {
     # for train
     'resume_from': '',  # 继续训练地址
     'third_party_name': '',  # 加载paddle模型可选
-    'checkpoint_save_dir': f"./output/{config.exp_name}/checkpoint",  # 模型保存地址，log文件也保存在这里
+    # 模型保存地址，log文件也保存在这里
+    'checkpoint_save_dir': f"./output/{config.exp_name}/checkpoint",
     'device': 'cuda:0',  # 不建议修改
     'epochs': 1200,
     'fine_tune_stage': ['backbone', 'neck', 'head'],
     'print_interval': 1,  # step为单位
     'val_interval': 1,  # epoch为单位
-    'ckpt_save_type': 'HighestAcc',  # HighestAcc：只保存最高准确率模型 ；FixedEpochStep：每隔ckpt_save_epoch个epoch保存一个
+    # HighestAcc：只保存最高准确率模型 ；FixedEpochStep：每隔ckpt_save_epoch个epoch保存一个
+    'ckpt_save_type': 'HighestAcc',
     'ckpt_save_epoch': 4,  # epoch为单位, 只有ckpt_save_type选择FixedEpochStep时，该参数才有效
 }
 
@@ -48,7 +50,8 @@ config.optimizer = {
 
 config.model = {
     'type': "DetModel",
-    'backbone': {"type": "ResNet", 'layers': 18, 'pretrained': True}, # ResNet or MobileNetV3
+    # ResNet or MobileNetV3
+    'backbone': {"type": "ResNet", 'layers': 18, 'pretrained': True},
     'neck': {"type": 'FPN', 'out_channels': 256},
     'head': {"type": "DBHead"},
     'in_channels': 3,
@@ -69,22 +72,27 @@ config.post_process = {
 
 # for dataset
 # ##lable文件
-### 存在问题，gt中str-->label 是放在loss中还是放在dataloader中
+# 存在问题，gt中str-->label 是放在loss中还是放在dataloader中
 config.dataset = {
     'train': {
         'dataset': {
             'type': 'JsonDataset',
-            'file': r'train.json',
+            'data_root': r'/Users/xintao/Desktop/total_text/train_images',
+            'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
             # db 预处理，不需要修改
             'pre_processes': [{'type': 'IaaAugment', 'args': [{'type': 'Fliplr', 'args': {'p': 0.5}},
-                                                              {'type': 'Affine', 'args': {'rotate': [-10, 10]}},
-                                                              {'type': 'Resize', 'args': {'size': [0.5, 3]}}]},
-                              {'type': 'EastRandomCropData', 'args': {'size': [640, 640], 'max_tries': 50, 'keep_ratio': True}},
-                              {'type': 'MakeBorderMap', 'args': {'shrink_ratio': 0.4, 'thresh_min': 0.3, 'thresh_max': 0.7}},
+                                                              {'type': 'Affine', 'args': {
+                                                                  'rotate': [-10, 10]}},
+                                                              {'type': 'Scale', 'args': {'size': [0.5, 3]}}]},
+                              # {'type': 'EastRandomCropData', 'args': {
+                              #     'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
+                              {'type': 'MakeBorderMap', 'args': {
+                                  'shrink_ratio': 0.4, 'thresh_min': 0.3, 'thresh_max': 0.7}},
                               {'type': 'MakeShrinkMap', 'args': {'shrink_ratio': 0.4, 'min_text_size': 8}}],
-            'filter_keys': ['img_path', 'img_name', 'text_polys', 'texts', 'ignore_tags', 'shape'],  # 需要从data_dict里过滤掉的key
+            # 需要从data_dict里过滤掉的key
+            'filter_keys': ['img_path', 'img_name', 'texts', 'ignore_tags', 'shape'],
             'ignore_tags': ['*', '###'],
             'img_mode': 'RGB'
         },
@@ -101,7 +109,8 @@ config.dataset = {
     'eval': {
         'dataset': {
             'type': 'JsonDataset',
-            'file': r'test.json',
+            'data_root': '/Users/xintao/Desktop/total_text/test_images',
+            'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
             'pre_processes': [{'type': 'ResizeShortSize', 'args': {'short_size': 736, 'resize_text_polys': False}}],
