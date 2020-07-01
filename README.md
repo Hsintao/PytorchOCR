@@ -15,6 +15,7 @@ PytorchOCR旨在打造一套训练，推理，部署一体的OCR引擎库
 * [x] imagenet预训练模型
 * [ ] 识别模型预训练模型
 * [ ] DB通用模型
+* [ ] ONNX导出
 * [ ] 手机端部署
 
 ## 环境配置
@@ -28,7 +29,7 @@ PytorchOCR旨在打造一套训练，推理，部署一体的OCR引擎库
 ```bash
 pip3 install -r requirements.txt
 ```
-```python
+```
 cd assets/ops/dcn/
 python setup.py build_ext --inplace
 ```
