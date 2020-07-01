@@ -14,6 +14,7 @@ from torchocr.networks import build_model
 from torchvision import transforms
 from torch import nn
 import torch
+import time
 
 
 class DetInfer:
@@ -83,8 +84,10 @@ if __name__ == '__main__':
     img = cv2.imread(args.img_path)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     model = DetInfer(args.model_path)
+    tic = time.time()
     box_list, score_list = model.predict(img, is_output_polygon=False)
+    print(f'infer single image in {(time.time() - tic):.4f}s')
     # img = draw_ocr_box_txt(img, box_list)
     img = draw_bbox(img, box_list)
-    plt.imshow(img)
-    plt.show()
+    cv2.imwrite(filename='imgs/result_det.jpg', img=img)
+    # plt.show()
