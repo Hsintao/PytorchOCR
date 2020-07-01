@@ -2,37 +2,39 @@
 # @Time    : 2020/5/19 21:44
 # @Author  : xiangjing
 
+from torchocr.metrics import DetMetric
+from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkpoint
+from torchocr.datasets import build_dataloader
+from torchocr.postprocess import build_post_process
+from torchocr.networks import build_model, build_loss
+from torch import nn
+import torch.optim as optim
+from tqdm import tqdm
+import torch
+import numpy as np
+from importlib import import_module
+import traceback
+import shutil
+import time
+import random
 import os
 import sys
 import pathlib
 
-# 将 torchocr路径加到python陆经里
+# 将 torchocr路径加到python路径里
 __dir__ = pathlib.Path(os.path.abspath(__file__))
 sys.path.append(str(__dir__))
 sys.path.append(str(__dir__.parent.parent))
-import random
-import time
-import shutil
-import traceback
-from importlib import import_module
-
-import numpy as np
-import torch
-from tqdm import tqdm
-import torch.optim as optim
-from torch import nn
-
-from torchocr.networks import build_model, build_loss
-from torchocr.postprocess import build_post_process
-from torchocr.datasets import build_dataloader
-from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkpoint
-from torchocr.metrics import DetMetric
 
 
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='train')
-    parser.add_argument('--config', type=str, default='config/det_train_db_config.py', help='train config file path')
+    parser.add_argument(
+        '--config',
+        type=str,
+        default='config/det_train_db_config.py',
+        help='train config file path')
     args = parser.parse_args()
     # 解析.py文件
     config_path = os.path.abspath(os.path.expanduser(args.config))
@@ -136,14 +138,18 @@ def evaluate(net, val_loader, to_use_device, logger, post_process, metric):
         for batch_data in tqdm(val_loader):
             start = time.time()
             output = net.forward(batch_data['img'].to(to_use_device))
-            boxes, scores = post_process(output, batch_data['shape'], is_output_polygon=metric.is_output_polygon)
+            boxes, scores = post_process(
+                output, batch_data['shape'], is_output_polygon=metric.is_output_polygon)
             total_frame += batch_data['img'].size()[0]
             total_time += time.time() - start
             raw_metric = metric(batch_data, (boxes, scores))
             raw_metrics.append(raw_metric)
     metrics = metric.gather_measure(raw_metrics)
     net.train()
-    result_dict = {'recall': metrics['recall'].avg, 'precision': metrics['precision'].avg, 'hmean': metrics['fmeasure'].avg}
+    result_dict = {
+        'recall': metrics['recall'].avg,
+        'precision': metrics['precision'].avg,
+        'hmean': metrics['fmeasure'].avg}
     for k, v in result_dict.items():
         logger.info(f'{k}:{v}')
     logger.info('FPS:{}'.format(total_frame / total_time))
@@ -175,18 +181,27 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
     logger.info('Training...')
     # ===> print loss信息的参数
     all_step = len(train_loader)
-    logger.info(f'train dataset has {train_loader.dataset.__len__()} samples,{all_step} in dataloader')
-    logger.info(f'eval dataset has {eval_loader.dataset.__len__()} samples,{len(eval_loader)} in dataloader')
-    best_model = {'recall': 0, 'precision': 0, 'hmean': 0, 'best_model_epoch': 0}
+    logger.info(
+        f'train dataset has {train_loader.dataset.__len__()} samples,{all_step} in dataloader')
+    logger.info(
+        f'eval dataset has {eval_loader.dataset.__len__()} samples,{len(eval_loader)} in dataloader')
+    best_model = {
+        'recall': 0,
+        'precision': 0,
+        'hmean': 0,
+        'best_model_epoch': 0}
     # 开始训练
     base_lr = optimizer.param_groups[0]['lr']
     try:
-        for epoch in range(_epoch, train_options['epochs']):  # traverse each epoch
+        for epoch in range(
+                _epoch, train_options['epochs']):  # traverse each epoch
             net.train()  # train mode
             train_loss = 0.
             start = time.time()
-            for i, batch_data in enumerate(train_loader):  # traverse each batch in the epoch
-                current_lr = adjust_learning_rate(optimizer, base_lr, epoch, train_options['epochs'], 0.9)
+            for i, batch_data in enumerate(
+                    train_loader):  # traverse each batch in the epoch
+                current_lr = adjust_learning_rate(
+                    optimizer, base_lr, epoch, train_options['epochs'], 0.9)
                 # 数据进行转换和丢到gpu
                 for key, value in batch_data.items():
                     if value is not None:
@@ -200,7 +215,8 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
                 optimizer.step()
                 # statistic loss for print
                 train_loss += loss_dict['loss'].item()
-                loss_str = 'loss: {:.4f} - '.format(loss_dict.pop('loss').item())
+                loss_str = 'loss: {:.4f} - '.format(
+                    loss_dict.pop('loss').item())
                 for idx, (key, value) in enumerate(loss_dict.items()):
                     loss_dict[key] = value.item()
                     loss_str += '{}: {:.4f}'.format(key, loss_dict[key])
@@ -218,26 +234,44 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
             logger.info(f'train_loss: {train_loss / len(train_loader)}')
             if (epoch + 1) % train_options['val_interval'] == 0:
                 # val
-                eval_dict = evaluate(net, eval_loader, to_use_device, logger, post_process, metric)
+                eval_dict = evaluate(
+                    net,
+                    eval_loader,
+                    to_use_device,
+                    logger,
+                    post_process,
+                    metric)
                 if train_options['ckpt_save_type'] == 'HighestAcc':
                     net_save_path = f"{train_options['checkpoint_save_dir']}/latest.pth"
-                    save_checkpoint(net_save_path, net, optimizer, epoch, logger, cfg)
+                    save_checkpoint(
+                        net_save_path, net, optimizer, epoch, logger, cfg)
                     if eval_dict['hmean'] > best_model['hmean']:
                         best_model.update(eval_dict)
                         best_model['models'] = net_save_path
-                        shutil.copy(net_save_path, net_save_path.replace('latest', 'best'))
-                elif train_options['ckpt_save_type'] == 'FixedEpochStep' and epoch % train_options['ckpt_save_epoch'] == 0:
+                        shutil.copy(
+                            net_save_path, net_save_path.replace(
+                                'latest', 'best'))
+                elif train_options['ckpt_save_type'] == 'FixedEpochStep' and epoch % train_options[
+                        'ckpt_save_epoch'] == 0:
                     net_save_path = f"{train_options['checkpoint_save_dir']}/{epoch}.pth"
-                    save_checkpoint(net_save_path, net, optimizer, epoch, logger, cfg)
+                    save_checkpoint(
+                        net_save_path, net, optimizer, epoch, logger, cfg)
                 best_str = 'current best, '
                 for k, v in best_model.items():
                     best_str += '{}: {}, '.format(k, v)
                 logger.info(best_str)
     except KeyboardInterrupt:
         import os
-        save_checkpoint(os.path.join(train_options['checkpoint_save_dir'], 'final.pth'), net,
-                        optimizer, epoch, logger, cfg)
-    except:
+        save_checkpoint(
+            os.path.join(
+                train_options['checkpoint_save_dir'],
+                'final.pth'),
+            net,
+            optimizer,
+            epoch,
+            logger,
+            cfg)
+    except BaseException:
         error_msg = traceback.format_exc()
         logger.error(error_msg)
     finally:
@@ -249,15 +283,20 @@ def main():
     # ===> 获取配置文件参数
     cfg = parse_args()
     os.makedirs(cfg.train_options['checkpoint_save_dir'], exist_ok=True)
-    logger = get_logger('torchocr', log_file=os.path.join(cfg.train_options['checkpoint_save_dir'], 'train.log'))
+    logger = get_logger('torchocr', log_file=os.path.join(
+        cfg.train_options['checkpoint_save_dir'], 'train.log'))
 
     # ===> 训练信息的打印
     train_options = cfg.train_options
     logger.info(cfg)
     # ===>
     to_use_device = torch.device(
-        train_options['device'] if torch.cuda.is_available() and ('cuda' in train_options['device']) else 'cpu')
-    set_random_seed(cfg['SEED'], 'cuda' in train_options['device'], deterministic=True)
+        train_options['device'] if torch.cuda.is_available() and (
+            'cuda' in train_options['device']) else 'cpu')
+    set_random_seed(
+        cfg['SEED'],
+        'cuda' in train_options['device'],
+        deterministic=True)
 
     # ===> build network
     net = build_model(cfg['model'])
@@ -270,15 +309,16 @@ def main():
     net.train()
 
     # ===> get fine tune layers
-    params_to_train = get_fine_tune_params(net, train_options['fine_tune_stage'])
+    params_to_train = get_fine_tune_params(
+        net, train_options['fine_tune_stage'])
     # ===> solver and lr scheduler
     optimizer = build_optimizer(net.parameters(), cfg['optimizer'])
 
     # ===> whether to resume from checkpoint
     resume_from = train_options['resume_from']
     if resume_from:
-        net, current_epoch, _resumed_optimizer = load_checkpoint(net, resume_from, to_use_device, optimizer,
-                                                                 third_name=train_options['third_party_name'])
+        net, current_epoch, _resumed_optimizer = load_checkpoint(
+            net, resume_from, to_use_device, optimizer, third_name=train_options['third_party_name'])
         if _resumed_optimizer:
             optimizer = _resumed_optimizer
         logger.info(f'net resume from {resume_from}')
@@ -297,7 +337,17 @@ def main():
     # post_process
     post_process = build_post_process(cfg['post_process'])
     # ===> train
-    train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device, cfg, current_epoch, logger, post_process)
+    train(
+        net,
+        optimizer,
+        loss_func,
+        train_loader,
+        eval_loader,
+        to_use_device,
+        cfg,
+        current_epoch,
+        logger,
+        post_process)
 
 
 if __name__ == '__main__':

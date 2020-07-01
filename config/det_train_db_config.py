@@ -34,7 +34,7 @@ config.train_options = {
     'device': 'cuda:0',  # 不建议修改
     'epochs': 1200,
     'fine_tune_stage': ['backbone', 'neck', 'head'],
-    'print_interval': 1,  # step为单位
+    'print_interval': 5,  # step为单位
     'val_interval': 1,  # epoch为单位
     # HighestAcc：只保存最高准确率模型 ；FixedEpochStep：每隔ckpt_save_epoch个epoch保存一个
     'ckpt_save_type': 'HighestAcc',
@@ -44,14 +44,14 @@ config.train_options = {
 config.SEED = 927
 config.optimizer = {
     'type': 'Adam',
-    'lr': 0.001,
+    'lr': 0.002,
     'weight_decay': 1e-4,
 }
 
 config.model = {
     'type': "DetModel",
     # ResNet or MobileNetV3
-    'backbone': {"type": "ResNet", 'layers': 18, 'pretrained': True},
+    'backbone': {"type": "ResNet", 'layers': 50, 'pretrained': True},
     'neck': {"type": 'FPN', 'out_channels': 256},
     'head': {"type": "DBHead"},
     'in_channels': 3,
@@ -66,7 +66,7 @@ config.loss = {
 config.post_process = {
     'type': 'DBPostProcess',
     'thresh': 0.3,  # 二值化输出map的阈值
-    'box_thresh': 0.7,  # 低于此阈值的box丢弃
+    'box_thresh': 0.5,  # 低于此阈值的box丢弃
     'unclip_ratio': 1.5  # 扩大框的比例
 }
 
@@ -76,8 +76,8 @@ config.post_process = {
 config.dataset = {
     'train': {
         'dataset': {
-            'type': 'JsonDataset',
-            'data_root': r'/Users/xintao/Desktop/total_text/train_images',
+            'type': 'TextDataset',
+            'data_root': r'/home/wk/xintao/DB/datasets/total_text/train_images',
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
@@ -86,21 +86,21 @@ config.dataset = {
                                                               {'type': 'Affine', 'args': {
                                                                   'rotate': [-10, 10]}},
                                                               {'type': 'Scale', 'args': {'size': [0.5, 3]}}]},
-                              # {'type': 'EastRandomCropData', 'args': {
-                              #     'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
+                               {'type': 'EastRandomCropData', 'args': {
+                                   'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
                               {'type': 'MakeBorderMap', 'args': {
                                   'shrink_ratio': 0.4, 'thresh_min': 0.3, 'thresh_max': 0.7}},
                               {'type': 'MakeShrinkMap', 'args': {'shrink_ratio': 0.4, 'min_text_size': 8}}],
             # 需要从data_dict里过滤掉的key
-            'filter_keys': ['img_path', 'img_name', 'texts', 'ignore_tags', 'shape'],
+            'filter_keys': ['img_name', 'texts', 'ignore_tags', 'shape'],
             'ignore_tags': ['*', '###'],
             'img_mode': 'RGB'
         },
         'loader': {
             'type': 'DataLoader',  # 使用torch dataloader只需要改为 DataLoader
-            'batch_size': 8,
+            'batch_size': 4,
             'shuffle': True,
-            'num_workers': 1,
+            'num_workers': 4,
             'collate_fn': {
                 'type': ''
             }
@@ -108,8 +108,8 @@ config.dataset = {
     },
     'eval': {
         'dataset': {
-            'type': 'JsonDataset',
-            'data_root': '/Users/xintao/Desktop/total_text/test_images',
+            'type': 'TextDataset',
+            'data_root': '/home/wk/xintao/DB/datasets/total_text/test_images',
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
@@ -124,7 +124,7 @@ config.dataset = {
             'shuffle': False,
             'num_workers': 1,
             'collate_fn': {
-                'type': 'DetCollectFN'
+                'type': ''
             }
         }
     }

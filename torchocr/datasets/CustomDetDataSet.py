@@ -51,6 +51,7 @@ class TextDataset(Dataset):
         data_list = []
 
         img_names = os.listdir(self.data_root)
+        # img_names = ['img_55.jpg']
         # if 'train_images' in self.data_root:
         #     gts_root = self.data_root.replace('train_images', 'train_gts')
         # elif 'test_images' in self.data_root:
@@ -70,7 +71,11 @@ class TextDataset(Dataset):
                 # polygons.append(list(map(int, info[:-1])))
                 line = list(map(int, info[:-1]))
                 tmp = [[line[i * 2], line[i * 2 + 1]] for i in range(int(len(line) // 2))]
-                polygons.append(tmp)
+                cnt = np.array(tmp)
+                rect = cv2.minAreaRect(cnt)
+                box = cv2.boxPoints(rect)
+                box = np.int0(box)
+                polygons.append(box)
                 texts.append(info[-1])
                 illegibility_list.append(False)
                 language_list.append('any')
@@ -92,7 +97,7 @@ class TextDataset(Dataset):
         data['img'] = im
         data['shape'] = [im.shape[0], im.shape[1]]
         data = self.apply_pre_processes(data)
-
+        data['ori_img'] = data['img']
         if self.transform:
             data['img'] = self.transform(data['img'])
         data['text_polys'] = data['text_polys'].tolist()
@@ -120,17 +125,25 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     dataset = TextDataset(config.dataset.train.dataset)
-    train_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=False, num_workers=0)
-    for i, data in enumerate(tqdm(train_loader)):
+    train_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=0)
+    for i, data in enumerate(train_loader):
         img = data['img']
         shrink_label = data['shrink_map']
         threshold_label = data['threshold_map']
-
+        print(data['text_polys'])
+        print(data['img_path'])
         print(threshold_label.shape, threshold_label.shape, img.shape)
-        show_img(img[0].numpy().transpose(1, 2, 0), title='img')
-        show_img((shrink_label[0].to(torch.float)).numpy(), title='shrink_label')
-        show_img((threshold_label[0].to(torch.float)).numpy(), title='threshold_label')
-        img = draw_bbox(img[0].numpy().transpose(1, 2, 0), np.array(data['text_polys']))
-        show_img(img, title='draw_bbox')
-        plt.show()
-        pass
+        # im = cv2.imread(data['img_path'][0])
+        im = data['ori_img'][0].numpy()
+        im = im.astype(np.uint8)
+        shrink = shrink_label[0].float().numpy() * 255
+        shrink = shrink.astype(np.uint8)
+        threshold = threshold_label[0].float().numpy() * 255
+        threshold = threshold.astype(np.uint8)
+        import cv2
+        cv2.imshow('im', im)
+        cv2.imshow('shrink', shrink)
+        cv2.imshow('thresh', threshold)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+        break
