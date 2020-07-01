@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/5/19 21:44
 # @Author  : xiangjing
+import random
+import time
+import shutil
+import traceback
+from importlib import import_module
+import numpy as np
+import torch
+from tqdm import tqdm
+from torch import nn
+from torchocr.networks import build_model, build_loss
+from torchocr.postprocess import build_post_process
+from torchocr.datasets import build_dataloader
+from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkpoint
+from torchocr.metrics import DetMetric
 import os
-import sys
 import pathlib
+import sys
 
 # 将 torchocr路径加到python路径里
 __dir__ = pathlib.Path(os.path.abspath(__file__))
 sys.path.append(str(__dir__))
 sys.path.append(str(__dir__.parent.parent))
-
-from torchocr.metrics import DetMetric
-from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkpoint
-from torchocr.datasets import build_dataloader
-from torchocr.postprocess import build_post_process
-from torchocr.networks import build_model, build_loss
-from torch import nn
-import torch.optim as optim
-from tqdm import tqdm
-import torch
-import numpy as np
-from importlib import import_module
-import traceback
-import shutil
-import time
-import random
-
 
 
 def parse_args():
@@ -265,7 +262,7 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
                         net_save_path, net, optimizer, epoch, logger, cfg)
                 best_str = 'current best, '
                 for k, v in best_model.items():
-                    best_str += '{}: {}, '.format(k, v)
+                    best_str += '{}: {:.4f}, '.format(k, v)
                 logger.info(best_str)
     except KeyboardInterrupt:
         import os
@@ -283,7 +280,7 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
         logger.error(error_msg)
     finally:
         for k, v in best_model.items():
-            logger.info(f'{k}: {v}')
+            logger.info(f'{k}: {v:.4f}')
 
 
 def main():

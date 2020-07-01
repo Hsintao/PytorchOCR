@@ -1,6 +1,8 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/5/19 21:44
-# @Author  : xiangjing
+# @Time : 2020/7/1 5:15 下午
+# @Author : Xintao
+# @File : local_config.py
 
 # ####################rec_train_options 参数说明##########################
 # 识别训练参数
@@ -51,7 +53,7 @@ config.optimizer = {
 config.model = {
     'type': "DetModel",
     # ResNet or MobileNetV3
-    'backbone': {"type": "DResNet", 'layers': 50, 'pretrained': True},
+    'backbone': {"type": "ResNet", 'layers': 50, 'pretrained': True},
     'neck': {"type": 'FPN', 'out_channels': 256},
     'head': {"type": "DBHead"},
     'in_channels': 3,
@@ -77,7 +79,7 @@ config.dataset = {
     'train': {
         'dataset': {
             'type': 'TextDataset',
-            'data_root': r'/home/wk/xintao/DB/datasets/total_text/train_images',
+            'data_root': r'/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/train_images',
             # /Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
@@ -110,7 +112,7 @@ config.dataset = {
     'eval': {
         'dataset': {
             'type': 'TextDataset',
-            'data_root': '/home/wk/xintao/DB/datasets/total_text/test_images',
+            'data_root': '/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/test_images',
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],

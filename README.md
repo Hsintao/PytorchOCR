@@ -28,6 +28,10 @@ PytorchOCR旨在打造一套训练，推理，部署一体的OCR引擎库
 ```bash
 pip3 install -r requirements.txt
 ```
+```python
+cd assets/ops/dcn/
+python setup.py build_ext --inplace
+```
 
 ## 模型下载
 

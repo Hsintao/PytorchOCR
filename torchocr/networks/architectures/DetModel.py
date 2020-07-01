@@ -5,11 +5,12 @@ from addict import Dict as AttrDict
 from torch import nn
 
 from torchocr.networks.backbones.DetMobilenetV3 import MobileNetV3
+from torchocr.networks.backbones.DetResNet import deformable_resnet50, deformable_resnet18
 from torchocr.networks.backbones.DetResNetvd import ResNet
 from torchocr.networks.necks.FeaturePyramidNetwork import FeaturePyramidNetwork
 from torchocr.networks.heads.DetDbHead import DBHead
 
-backbone_dict = {'MobileNetV3': MobileNetV3, 'ResNet': ResNet}
+backbone_dict = {'MobileNetV3': MobileNetV3, 'ResNet': ResNet, 'DResNet': None}
 neck_dict = {'FPN': FeaturePyramidNetwork}
 head_dict = {'DBHead': DBHead}
 
@@ -19,9 +20,19 @@ class DetModel(nn.Module):
         super().__init__()
         assert 'in_channels' in config, 'in_channels must in model config'
         backbone_type = config.backbone.pop('type')
-        assert backbone_type in backbone_dict, f'backbone.type must in {backbone_dict}'
-        self.backbone = backbone_dict[backbone_type](config.in_channels, **config.backbone)
 
+        assert backbone_type in backbone_dict, f'backbone.type must in {backbone_dict}'
+        # print(config.backbone.layers, type(config.backbone.layers))
+        if backbone_type == "DResNet":
+            if config.backbone.layers == 18:
+                self.backbone = deformable_resnet18(pretrained=True)
+            elif config.backbone.layers == 50:
+                self.backbone = deformable_resnet50(pretrained=True)
+            else:
+                raise ValueError('deformable_resnet channels must in [18, 50]')
+        else:
+            self.backbone = backbone_dict[backbone_type](config.in_channels, **config.backbone)
+        # print(self.backbone.out_channels)
         neck_type = config.neck.pop('type')
         assert neck_type in neck_dict, f'neck.type must in {neck_dict}'
         self.neck = neck_dict[neck_type](self.backbone.out_channels, **config.neck)

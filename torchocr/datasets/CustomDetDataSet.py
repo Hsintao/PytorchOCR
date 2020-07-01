@@ -12,7 +12,8 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchocr.datasets.det_modules import *
-from .DetCollateFN import DetCollectFN
+
+
 
 class TextDataset(Dataset):
     def __init__(self, config):
@@ -119,14 +120,11 @@ class TextDataset(Dataset):
 if __name__ == '__main__':
     import torch
     from torch.utils.data import DataLoader
-    from config.det_train_db_config import config
-    from torchocr.utils import show_img, draw_bbox
-
-    from matplotlib import pyplot as plt
+    from config.local_config import config
 
     dataset = TextDataset(config.dataset.train.dataset)
-    train_loader = DataLoader(dataset=dataset, batch_size=2, shuffle=True, num_workers=0, collate_fn=DetCollectFN)
-    for i, data in enumerate(train_loader):
+    train_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=0)
+    for data in train_loader:
         img = data['img']
         shrink_label = data['shrink_map']
         threshold_label = data['threshold_map']

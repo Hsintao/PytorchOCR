@@ -2,8 +2,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from collections import OrderedDict
 import os
+from collections import OrderedDict
+
 import torch
 from torch import nn
 
@@ -11,11 +12,24 @@ from torchocr.networks.CommonModules import HSwish
 
 
 class ConvBNACT(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, stride=1, padding=0, groups=1, act=None):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            stride=1,
+            padding=0,
+            groups=1,
+            act=None):
         super().__init__()
-        self.conv = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size,
-                              stride=stride, padding=padding, groups=groups,
-                              bias=False)
+        self.conv = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=stride,
+            padding=padding,
+            groups=groups,
+            bias=False)
         self.bn = nn.BatchNorm2d(out_channels)
         if act == 'relu':
             self.act = nn.ReLU()
@@ -27,15 +41,20 @@ class ConvBNACT(nn.Module):
     def load_3rd_state_dict(self, _3rd_name, _state, _name_prefix):
         to_load_state_dict = OrderedDict()
         if _3rd_name == 'paddle':
-            to_load_state_dict['conv.weight'] = torch.Tensor(_state[f'{_name_prefix}_weights'])
+            to_load_state_dict['conv.weight'] = torch.Tensor(
+                _state[f'{_name_prefix}_weights'])
             if _name_prefix == 'conv1':
                 bn_name = f'bn_{_name_prefix}'
             else:
                 bn_name = f'bn{_name_prefix[3:]}'
-            to_load_state_dict['bn.weight'] = torch.Tensor(_state[f'{bn_name}_scale'])
-            to_load_state_dict['bn.bias'] = torch.Tensor(_state[f'{bn_name}_offset'])
-            to_load_state_dict['bn.running_mean'] = torch.Tensor(_state[f'{bn_name}_mean'])
-            to_load_state_dict['bn.running_var'] = torch.Tensor(_state[f'{bn_name}_variance'])
+            to_load_state_dict['bn.weight'] = torch.Tensor(
+                _state[f'{bn_name}_scale'])
+            to_load_state_dict['bn.bias'] = torch.Tensor(
+                _state[f'{bn_name}_offset'])
+            to_load_state_dict['bn.running_mean'] = torch.Tensor(
+                _state[f'{bn_name}_mean'])
+            to_load_state_dict['bn.running_var'] = torch.Tensor(
+                _state[f'{bn_name}_variance'])
             self.load_state_dict(to_load_state_dict)
         else:
             pass
@@ -49,14 +68,29 @@ class ConvBNACT(nn.Module):
 
 
 class ConvBNACTWithPool(nn.Module):
-    def __init__(self, in_channels, out_channels, kernel_size, groups=1, act=None):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            kernel_size,
+            groups=1,
+            act=None):
         super().__init__()
-        self.pool = nn.AvgPool2d(kernel_size=2, stride=2, padding=0, ceil_mode=True)
+        self.pool = nn.AvgPool2d(
+            kernel_size=2,
+            stride=2,
+            padding=0,
+            ceil_mode=True)
 
-        self.conv = nn.Conv2d(in_channels=in_channels, out_channels=out_channels, kernel_size=kernel_size, stride=1,
-                              padding=(kernel_size - 1) // 2,
-                              groups=groups,
-                              bias=False)
+        self.conv = nn.Conv2d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=kernel_size,
+            stride=1,
+            padding=(
+                            kernel_size - 1) // 2,
+            groups=groups,
+            bias=False)
         self.bn = nn.BatchNorm2d(out_channels)
         if act is None:
             self.act = None
@@ -66,15 +100,20 @@ class ConvBNACTWithPool(nn.Module):
     def load_3rd_state_dict(self, _3rd_name, _state, _name_prefix):
         to_load_state_dict = OrderedDict()
         if _3rd_name == 'paddle':
-            to_load_state_dict['conv.weight'] = torch.Tensor(_state[f'{_name_prefix}_weights'])
+            to_load_state_dict['conv.weight'] = torch.Tensor(
+                _state[f'{_name_prefix}_weights'])
             if _name_prefix == 'conv1':
                 bn_name = f'bn_{_name_prefix}'
             else:
                 bn_name = f'bn{_name_prefix[3:]}'
-            to_load_state_dict['bn.weight'] = torch.Tensor(_state[f'{bn_name}_scale'])
-            to_load_state_dict['bn.bias'] = torch.Tensor(_state[f'{bn_name}_offset'])
-            to_load_state_dict['bn.running_mean'] = torch.Tensor(_state[f'{bn_name}_mean'])
-            to_load_state_dict['bn.running_var'] = torch.Tensor(_state[f'{bn_name}_variance'])
+            to_load_state_dict['bn.weight'] = torch.Tensor(
+                _state[f'{bn_name}_scale'])
+            to_load_state_dict['bn.bias'] = torch.Tensor(
+                _state[f'{bn_name}_offset'])
+            to_load_state_dict['bn.running_mean'] = torch.Tensor(
+                _state[f'{bn_name}_mean'])
+            to_load_state_dict['bn.running_var'] = torch.Tensor(
+                _state[f'{bn_name}_variance'])
             self.load_state_dict(to_load_state_dict)
         else:
             pass
@@ -89,21 +128,43 @@ class ConvBNACTWithPool(nn.Module):
 
 
 class ShortCut(nn.Module):
-    def __init__(self, in_channels, out_channels, stride, name, if_first=False):
+    def __init__(
+            self,
+            in_channels,
+            out_channels,
+            stride,
+            name,
+            if_first=False):
         super().__init__()
         assert name is not None, 'shortcut must have name'
 
         self.name = name
         if in_channels != out_channels or stride != 1:
             if if_first:
-                self.conv = ConvBNACT(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride,
-                                      padding=0, groups=1, act=None)
+                self.conv = ConvBNACT(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    kernel_size=1,
+                    stride=stride,
+                    padding=0,
+                    groups=1,
+                    act=None)
             else:
-                self.conv = ConvBNACTWithPool(in_channels=in_channels, out_channels=out_channels, kernel_size=1,
-                                              groups=1, act=None)
+                self.conv = ConvBNACTWithPool(
+                    in_channels=in_channels,
+                    out_channels=out_channels,
+                    kernel_size=1,
+                    groups=1,
+                    act=None)
         elif if_first:
-            self.conv = ConvBNACT(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=stride,
-                                  padding=0, groups=1, act=None)
+            self.conv = ConvBNACT(
+                in_channels=in_channels,
+                out_channels=out_channels,
+                kernel_size=1,
+                stride=stride,
+                padding=0,
+                groups=1,
+                act=None)
         else:
             self.conv = None
 
@@ -125,21 +186,46 @@ class BottleneckBlock(nn.Module):
         super().__init__()
         assert name is not None, 'bottleneck must have name'
         self.name = name
-        self.conv0 = ConvBNACT(in_channels=in_channels, out_channels=out_channels, kernel_size=1, stride=1, padding=0,
-                               groups=1, act='relu')
-        self.conv1 = ConvBNACT(in_channels=out_channels, out_channels=out_channels, kernel_size=3, stride=stride,
-                               padding=1, groups=1, act='relu')
-        self.conv2 = ConvBNACT(in_channels=out_channels, out_channels=out_channels * 4, kernel_size=1, stride=1,
-                               padding=0, groups=1, act=None)
-        self.shortcut = ShortCut(in_channels=in_channels, out_channels=out_channels * 4, stride=stride,
-                                 if_first=if_first, name=f'{name}_branch1')
+        self.conv0 = ConvBNACT(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            groups=1,
+            act='relu')
+        self.conv1 = ConvBNACT(
+            in_channels=out_channels,
+            out_channels=out_channels,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=1,
+            act='relu')
+        self.conv2 = ConvBNACT(
+            in_channels=out_channels,
+            out_channels=out_channels * 4,
+            kernel_size=1,
+            stride=1,
+            padding=0,
+            groups=1,
+            act=None)
+        self.shortcut = ShortCut(
+            in_channels=in_channels,
+            out_channels=out_channels * 4,
+            stride=stride,
+            if_first=if_first,
+            name=f'{name}_branch1')
         self.relu = nn.ReLU()
         self.output_channels = out_channels * 4
 
     def load_3rd_state_dict(self, _3rd_name, _state):
-        self.conv0.load_3rd_state_dict(_3rd_name, _state, f'{self.name}_branch2a')
-        self.conv1.load_3rd_state_dict(_3rd_name, _state, f'{self.name}_branch2b')
-        self.conv2.load_3rd_state_dict(_3rd_name, _state, f'{self.name}_branch2c')
+        self.conv0.load_3rd_state_dict(
+            _3rd_name, _state, f'{self.name}_branch2a')
+        self.conv1.load_3rd_state_dict(
+            _3rd_name, _state, f'{self.name}_branch2b')
+        self.conv2.load_3rd_state_dict(
+            _3rd_name, _state, f'{self.name}_branch2c')
         self.shortcut.load_3rd_state_dict(_3rd_name, _state)
 
     def forward(self, x):
@@ -156,19 +242,38 @@ class BasicBlock(nn.Module):
         assert name is not None, 'block must have name'
         self.name = name
 
-        self.conv0 = ConvBNACT(in_channels=in_channels, out_channels=out_channels, kernel_size=3, stride=stride,
-                               padding=1, groups=1, act='relu')
-        self.conv1 = ConvBNACT(in_channels=out_channels, out_channels=out_channels, kernel_size=3, stride=1, padding=1,
-                               groups=1, act=None)
-        self.shortcut = ShortCut(in_channels=in_channels, out_channels=out_channels, stride=stride,
-                                 name=f'{name}_branch1', if_first=if_first, )
+        self.conv0 = ConvBNACT(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=3,
+            stride=stride,
+            padding=1,
+            groups=1,
+            act='relu')
+        self.conv1 = ConvBNACT(
+            in_channels=out_channels,
+            out_channels=out_channels,
+            kernel_size=3,
+            stride=1,
+            padding=1,
+            groups=1,
+            act=None)
+        self.shortcut = ShortCut(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            stride=stride,
+            name=f'{name}_branch1',
+            if_first=if_first,
+        )
         self.relu = nn.ReLU()
         self.output_channels = out_channels
 
     def load_3rd_state_dict(self, _3rd_name, _state):
         if _3rd_name == 'paddle':
-            self.conv0.load_3rd_state_dict(_3rd_name, _state, f'{self.name}_branch2a')
-            self.conv1.load_3rd_state_dict(_3rd_name, _state, f'{self.name}_branch2b')
+            self.conv0.load_3rd_state_dict(
+                _3rd_name, _state, f'{self.name}_branch2a')
+            self.conv1.load_3rd_state_dict(
+                _3rd_name, _state, f'{self.name}_branch2b')
             self.shortcut.load_3rd_state_dict(_3rd_name, _state)
         else:
             pass
@@ -203,10 +308,27 @@ class ResNet(nn.Module):
 
         num_filters = [64, 128, 256, 512]
         self.conv1 = nn.Sequential(
-            ConvBNACT(in_channels=in_channels, out_channels=32, kernel_size=3, stride=2, padding=1, act='relu'),
-            ConvBNACT(in_channels=32, out_channels=32, kernel_size=3, stride=1, padding=1, act='relu'),
-            ConvBNACT(in_channels=32, out_channels=64, kernel_size=3, stride=1, padding=1, act='relu')
-        )
+            ConvBNACT(
+                in_channels=in_channels,
+                out_channels=32,
+                kernel_size=3,
+                stride=2,
+                padding=1,
+                act='relu'),
+            ConvBNACT(
+                in_channels=32,
+                out_channels=32,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                act='relu'),
+            ConvBNACT(
+                in_channels=32,
+                out_channels=64,
+                kernel_size=3,
+                stride=1,
+                padding=1,
+                act='relu'))
         self.pool1 = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
 
         self.stages = nn.ModuleList()
@@ -220,20 +342,26 @@ class ResNet(nn.Module):
                         if i == 0:
                             conv_name = "res" + str(block_index + 2) + "a"
                         else:
-                            conv_name = "res" + str(block_index + 2) + "b" + str(i)
+                            conv_name = "res" + \
+                                        str(block_index + 2) + "b" + str(i)
                     else:
                         conv_name = "res" + str(block_index + 2) + chr(97 + i)
                 else:
                     conv_name = f'res{str(block_index + 2)}{chr(97 + i)}'
-                block_list.append(block_class(in_channels=in_ch, out_channels=num_filters[block_index],
-                                              stride=2 if i == 0 and block_index != 0 else 1,
-                                              if_first=block_index == i == 0, name=conv_name))
+                block_list.append(
+                    block_class(
+                        in_channels=in_ch,
+                        out_channels=num_filters[block_index],
+                        stride=2 if i == 0 and block_index != 0 else 1,
+                        if_first=block_index == i == 0,
+                        name=conv_name))
                 in_ch = block_list[-1].output_channels
             self.out_channels.append(in_ch)
             self.stages.append(nn.Sequential(*block_list))
         if pretrained:
             ckpt_path = f'./weights/resnet{layers}_vd.pth'
             if os.path.exists(ckpt_path):
+                print(f'load pretrained model from {ckpt_path}')
                 self.load_state_dict(torch.load(ckpt_path))
             else:
                 print(f'{ckpt_path} not exists')
@@ -241,7 +369,8 @@ class ResNet(nn.Module):
     def load_3rd_state_dict(self, _3rd_name, _state):
         if _3rd_name == 'paddle':
             for m_conv_index, m_conv in enumerate(self.conv1, 1):
-                m_conv.load_3rd_state_dict(_3rd_name, _state, f'conv1_{m_conv_index}')
+                m_conv.load_3rd_state_dict(
+                    _3rd_name, _state, f'conv1_{m_conv_index}')
             for m_stage in self.stages:
                 for m_block in m_stage:
                     m_block.load_3rd_state_dict(_3rd_name, _state)

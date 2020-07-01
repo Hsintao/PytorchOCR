@@ -1,7 +1,7 @@
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# @Time    : 2020/5/19 21:44
-# @Author  : xiangjing
-
+# @Time : 2020/7/1 4:55 下午
+# @Author : Xintao
 # ####################rec_train_options 参数说明##########################
 # 识别训练参数
 # base_lr：初始学习率
@@ -24,7 +24,7 @@
 from addict import Dict
 
 config = Dict()
-config.exp_name = 'DBNet'
+config.exp_name = 'DeformResNet_DBNet'
 config.train_options = {
     # for train
     'resume_from': f'',  # 继续训练地址
@@ -87,8 +87,8 @@ config.dataset = {
                                                               {'type': 'Affine', 'args': {
                                                                   'rotate': [-10, 10]}},
                                                               {'type': 'Resize', 'args': {'size': [0.5, 3]}}]},
-                               {'type': 'EastRandomCropData', 'args': {
-                                   'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
+                              {'type': 'EastRandomCropData', 'args': {
+                                  'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
                               {'type': 'MakeBorderMap', 'args': {
                                   'shrink_ratio': 0.4, 'thresh_min': 0.3, 'thresh_max': 0.7}},
                               {'type': 'MakeShrinkMap', 'args': {'shrink_ratio': 0.4, 'min_text_size': 8}}],

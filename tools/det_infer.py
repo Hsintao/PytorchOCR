@@ -4,18 +4,16 @@
 import os
 import sys
 import pathlib
-
 # 将 torchocr路径加到python陆经里
 __dir__ = pathlib.Path(os.path.abspath(__file__))
 sys.path.append(str(__dir__))
 sys.path.append(str(__dir__.parent.parent))
-
-import torch
-from torch import nn
-from torchvision import transforms
-from torchocr.networks import build_model
-from torchocr.datasets.det_modules import ResizeShortSize
 from torchocr.postprocess import build_post_process
+from torchocr.datasets.det_modules import ResizeShortSize
+from torchocr.networks import build_model
+from torchvision import transforms
+from torch import nn
+import torch
 
 
 class DetInfer:
@@ -28,16 +26,15 @@ class DetInfer:
             state_dict[k.replace('module.', '')] = v
         self.model.load_state_dict(state_dict)
 
-        self.device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device(
+            'cuda:0' if torch.cuda.is_available() else 'cpu')
         self.model.to(self.device)
         self.model.eval()
 
         self.resize = ResizeShortSize(736, False)
         self.post_proess = build_post_process(cfg['post_process'])
-        self.transform = transforms.Compose([
-            transforms.ToTensor(),
-            transforms.Normalize(mean=cfg['dataset']['train']['dataset']['mean'], std=cfg['dataset']['train']['dataset']['std'])
-        ])
+        self.transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize(
+            mean=cfg['dataset']['train']['dataset']['mean'], std=cfg['dataset']['train']['dataset']['std'])])
 
     def predict(self, img, is_output_polygon=False):
         # 预处理根据训练来
@@ -45,9 +42,11 @@ class DetInfer:
         data = self.resize(data)
         tensor = self.transform(data['img'])
         tensor = tensor.unsqueeze(dim=0)
-        tensor = tensor.to(self.device)
-        out = self.model(tensor)
-        box_list, score_list = self.post_proess(out, data['shape'], is_output_polygon=is_output_polygon)
+        with torch.no_grad():
+            tensor = tensor.to(self.device)
+            out = self.model(tensor)
+        box_list, score_list = self.post_proess(
+            out, data['shape'], is_output_polygon=is_output_polygon)
         box_list, score_list = box_list[0], score_list[0]
         if len(box_list) > 0:
             idx = [x.sum() > 0 for x in box_list]
@@ -61,8 +60,16 @@ class DetInfer:
 def init_args():
     import argparse
     parser = argparse.ArgumentParser(description='PytorchOCR infer')
-    parser.add_argument('--model_path', required=True, type=str, help='rec model path')
-    parser.add_argument('--img_path', required=True, type=str, help='img path for predict')
+    parser.add_argument(
+        '--model_path',
+        required=True,
+        type=str,
+        help='rec model path')
+    parser.add_argument(
+        '--img_path',
+        required=True,
+        type=str,
+        help='img path for predict')
     args = parser.parse_args()
     return args
 

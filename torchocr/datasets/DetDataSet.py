@@ -228,11 +228,11 @@ class TextDataset(Dataset):
 if __name__ == '__main__':
     import torch
     from torch.utils.data import DataLoader
-    from config.det_train_db_config import config
+    from config.local_config import config
     from torchocr.utils import show_img, draw_bbox
 
     from matplotlib import pyplot as plt
-    dataset = TextDataset(config.dataset.eval.dataset)
+    dataset = TextDataset(config.dataset.train.dataset)
     train_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=0)
     for i, data in enumerate(tqdm(train_loader)):
         img = data['img']
