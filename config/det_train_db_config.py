@@ -78,6 +78,7 @@ config.dataset = {
         'dataset': {
             'type': 'TextDataset',
             'data_root': r'/home/wk/xintao/DB/datasets/total_text/train_images',
+            #/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
@@ -85,7 +86,7 @@ config.dataset = {
             'pre_processes': [{'type': 'IaaAugment', 'args': [{'type': 'Fliplr', 'args': {'p': 0.5}},
                                                               {'type': 'Affine', 'args': {
                                                                   'rotate': [-10, 10]}},
-                                                              {'type': 'Scale', 'args': {'size': [0.5, 3]}}]},
+                                                              {'type': 'Resize', 'args': {'size': [0.5, 3]}}]},
                                {'type': 'EastRandomCropData', 'args': {
                                    'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
                               {'type': 'MakeBorderMap', 'args': {
@@ -124,7 +125,7 @@ config.dataset = {
             'shuffle': False,
             'num_workers': 1,
             'collate_fn': {
-                'type': ''
+                'type': 'DetCollectFN'
             }
         }
     }

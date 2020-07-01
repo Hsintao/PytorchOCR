@@ -10,6 +10,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchocr.datasets.det_modules import *
+from torchocr.datasets.DetCollateFN import DetCollectFN
 
 
 def load_json(file_path: str):
@@ -203,10 +204,12 @@ class TextDataset(Dataset):
         data['img'] = im
         data['shape'] = [im.shape[0], im.shape[1]]
         data = self.apply_pre_processes(data)
-        data['ori_img'] = data['img']
+        # data['ori_img'] = data['img']
         if self.transform:
             data['img'] = self.transform(data['img'])
         data['text_polys'] = data['text_polys'].tolist()
+        # print(data['text_polys'])
+        # exit()
         if len(self.filter_keys):
             data_dict = {}
             for k, v in data.items():
@@ -219,7 +222,7 @@ class TextDataset(Dataset):
         #     return self.__getitem__(np.random.randint(self.__len__()))
 
     def __len__(self):
-        return 20 # len(self.data_list)
+        return len(self.data_list)
 
 
 if __name__ == '__main__':
@@ -229,7 +232,7 @@ if __name__ == '__main__':
     from torchocr.utils import show_img, draw_bbox
 
     from matplotlib import pyplot as plt
-    dataset = JsonDataset(config.dataset.eval.dataset)
+    dataset = TextDataset(config.dataset.eval.dataset)
     train_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=0)
     for i, data in enumerate(tqdm(train_loader)):
         img = data['img']

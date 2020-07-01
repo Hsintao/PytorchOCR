@@ -12,7 +12,7 @@ from tqdm import tqdm
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchocr.datasets.det_modules import *
-
+from .DetCollateFN import DetCollectFN
 
 class TextDataset(Dataset):
     def __init__(self, config):
@@ -125,13 +125,14 @@ if __name__ == '__main__':
     from matplotlib import pyplot as plt
 
     dataset = TextDataset(config.dataset.train.dataset)
-    train_loader = DataLoader(dataset=dataset, batch_size=1, shuffle=True, num_workers=0)
+    train_loader = DataLoader(dataset=dataset, batch_size=2, shuffle=True, num_workers=0, collate_fn=DetCollectFN)
     for i, data in enumerate(train_loader):
         img = data['img']
         shrink_label = data['shrink_map']
         threshold_label = data['threshold_map']
         print(data['text_polys'])
         print(data['img_path'])
+        print(data['shape'])
         print(threshold_label.shape, threshold_label.shape, img.shape)
         # im = cv2.imread(data['img_path'][0])
         im = data['ori_img'][0].numpy()

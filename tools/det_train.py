@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/5/19 21:44
 # @Author  : xiangjing
+import os
+import sys
+import pathlib
+
+# 将 torchocr路径加到python路径里
+__dir__ = pathlib.Path(os.path.abspath(__file__))
+sys.path.append(str(__dir__))
+sys.path.append(str(__dir__.parent.parent))
 
 from torchocr.metrics import DetMetric
 from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkpoint
@@ -17,14 +25,7 @@ import traceback
 import shutil
 import time
 import random
-import os
-import sys
-import pathlib
 
-# 将 torchocr路径加到python路径里
-__dir__ = pathlib.Path(os.path.abspath(__file__))
-sys.path.append(str(__dir__))
-sys.path.append(str(__dir__.parent.parent))
 
 
 def parse_args():
@@ -138,8 +139,11 @@ def evaluate(net, val_loader, to_use_device, logger, post_process, metric):
         for batch_data in tqdm(val_loader):
             start = time.time()
             output = net.forward(batch_data['img'].to(to_use_device))
+            # print(output.shape)
+            # print(list(batch_data.keys()))
             boxes, scores = post_process(
                 output, batch_data['shape'], is_output_polygon=metric.is_output_polygon)
+            # print(boxes, scores)
             total_frame += batch_data['img'].size()[0]
             total_time += time.time() - start
             raw_metric = metric(batch_data, (boxes, scores))
@@ -202,6 +206,7 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
                     train_loader):  # traverse each batch in the epoch
                 current_lr = adjust_learning_rate(
                     optimizer, base_lr, epoch, train_options['epochs'], 0.9)
+                current_lr = float('%.7f' % current_lr)
                 # 数据进行转换和丢到gpu
                 for key, value in batch_data.items():
                     if value is not None:

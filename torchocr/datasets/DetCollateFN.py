@@ -23,6 +23,9 @@ class DetCollectFN:
                     if k not in to_tensor_keys:
                         to_tensor_keys.append(k)
                 data_dict[k].append(v)
+        # print(to_tensor_keys)
         for k in to_tensor_keys:
+            # print(data_dict[k].shape)
+            # data_dict[k] = [torch.from_numpy(i) for i in data_dict[k]]
             data_dict[k] = torch.stack(data_dict[k], 0)
         return data_dict

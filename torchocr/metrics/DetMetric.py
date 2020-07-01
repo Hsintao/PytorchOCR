@@ -41,6 +41,8 @@ class DetMetric():
         '''
         results = []
         gt_polyons_batch = batch['text_polys']
+        # print(gt_polyons_batch[0])
+        # exit()
         ignore_tags_batch = batch['ignore_tags']
         pred_polygons_batch = np.array(output[0])
         pred_scores_batch = np.array(output[1])

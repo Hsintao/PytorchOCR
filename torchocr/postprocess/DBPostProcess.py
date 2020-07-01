@@ -24,10 +24,11 @@ class DBPostProcess():
         boxes_batch = []
         scores_batch = []
         for batch_index in range(pred.shape[0]):
-            print(h_w_list[batch_index][0])
-            exit()
+            # print(h_w_list)
+            # exit()
             height, width = h_w_list[batch_index][:]
             boxes, scores = self.post_p(pred[batch_index], segmentation[batch_index], width, height, is_output_polygon=is_output_polygon)
+            # print(boxes, scores)
             boxes_batch.append(boxes)
             scores_batch.append(scores)
         return boxes_batch, scores_batch
