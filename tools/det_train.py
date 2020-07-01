@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2020/5/19 21:44
 # @Author  : xiangjing
+import os
+import pathlib
+import sys
+
+# 将 torchocr路径加到python路径里
+__dir__ = pathlib.Path(os.path.abspath(__file__))
+sys.path.append(str(__dir__))
+sys.path.append(str(__dir__.parent.parent))
 import random
 import time
 import shutil
@@ -15,14 +23,7 @@ from torchocr.postprocess import build_post_process
 from torchocr.datasets import build_dataloader
 from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkpoint
 from torchocr.metrics import DetMetric
-import os
-import pathlib
-import sys
 
-# 将 torchocr路径加到python路径里
-__dir__ = pathlib.Path(os.path.abspath(__file__))
-sys.path.append(str(__dir__))
-sys.path.append(str(__dir__.parent.parent))
 
 
 def parse_args():
@@ -236,6 +237,12 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
             logger.info(f'epoch_time: {epoch_time:.4f}s')
             avg_loss = train_loss / len(train_loader)
             logger.info(f'train_loss: {avg_loss:.4f}')
+            #  周期保存模型
+            if train_options['ckpt_save_type'] == 'EpochStep' and (epoch+1) % train_options['ckpt_save_epoch'] == 0:
+                net_save_path = f"{train_options['checkpoint_save_dir']}/{epoch}.pth"
+                save_checkpoint(net_save_path, net, optimizer, epoch, logger, cfg)
+
+            #  保存最好的模型
             if (epoch + 1) % train_options['val_interval'] == 0:
                 # val
                 eval_dict = evaluate(
@@ -245,42 +252,28 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
                     logger,
                     post_process,
                     metric)
-                if train_options['ckpt_save_type'] == 'HighestAcc':
-                    net_save_path = f"{train_options['checkpoint_save_dir']}/latest.pth"
-                    save_checkpoint(
-                        net_save_path, net, optimizer, epoch, logger, cfg)
-                    if eval_dict['hmean'] > best_model['hmean']:
-                        best_model.update(eval_dict)
-                        best_model['models'] = net_save_path
-                        shutil.copy(
-                            net_save_path, net_save_path.replace(
-                                'latest', 'best'))
-                elif train_options['ckpt_save_type'] == 'FixedEpochStep' and epoch % train_options[
-                        'ckpt_save_epoch'] == 0:
-                    net_save_path = f"{train_options['checkpoint_save_dir']}/{epoch}.pth"
-                    save_checkpoint(
-                        net_save_path, net, optimizer, epoch, logger, cfg)
+                # if train_options['ckpt_save_type'] == 'HighestAcc':
+                net_save_path = f"{train_options['checkpoint_save_dir']}/latest.pth"
+                save_checkpoint(net_save_path, net, optimizer, epoch, logger, cfg)
+                if eval_dict['hmean'] > best_model['hmean']:
+                    best_model.update(eval_dict)
+                    best_model['models'] = net_save_path
+                    shutil.copy(net_save_path, net_save_path.replace('latest', 'best'))
+
                 best_str = 'current best, '
                 for k, v in best_model.items():
-                    best_str += '{}: {:.4f}, '.format(k, v)
+                    best_str += '{}: {}, '.format(k, v)
                 logger.info(best_str)
     except KeyboardInterrupt:
         import os
         save_checkpoint(
-            os.path.join(
-                train_options['checkpoint_save_dir'],
-                'final.pth'),
-            net,
-            optimizer,
-            epoch,
-            logger,
-            cfg)
+            os.path.join(train_options['checkpoint_save_dir'], 'final.pth'), net, optimizer, epoch, logger, cfg)
     except BaseException:
         error_msg = traceback.format_exc()
         logger.error(error_msg)
     finally:
         for k, v in best_model.items():
-            logger.info(f'{k}: {v:.4f}')
+            logger.info(f'{k}: {v}')
 
 
 def main():

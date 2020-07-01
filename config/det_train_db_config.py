@@ -27,7 +27,7 @@ config = Dict()
 config.exp_name = 'DBNet'
 config.train_options = {
     # for train
-    'resume_from': f'',  # 继续训练地址
+    'resume_from': f'./output/{config.exp_name}/checkpoint/latest.pth',  # 继续训练地址
     'third_party_name': '',  # 加载paddle模型可选
     # 模型保存地址，log文件也保存在这里
     'checkpoint_save_dir': f"./output/{config.exp_name}/checkpoint",
@@ -37,7 +37,7 @@ config.train_options = {
     'print_interval': 10,  # step为单位
     'val_interval': 20,  # epoch为单位
     # HighestAcc：只保存最高准确率模型 ；FixedEpochStep：每隔ckpt_save_epoch个epoch保存一个
-    'ckpt_save_type': 'FixedEpochStep',
+    'ckpt_save_type': 'EpochStep',
     'ckpt_save_epoch': 10,  # epoch为单位, 只有ckpt_save_type选择FixedEpochStep时，该参数才有效
 }
 
@@ -51,7 +51,7 @@ config.optimizer = {
 config.model = {
     'type': "DetModel",
     # ResNet or MobileNetV3
-    'backbone': {"type": "DResNet", 'layers': 50, 'pretrained': True},
+    'backbone': {"type": "ResNet", 'layers': 50, 'pretrained': True},
     'neck': {"type": 'FPN', 'out_channels': 256},
     'head': {"type": "DBHead"},
     'in_channels': 3,
