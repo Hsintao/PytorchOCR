@@ -155,8 +155,8 @@ def evaluate(net, val_loader, to_use_device, logger, post_process, metric):
         'precision': metrics['precision'].avg,
         'hmean': metrics['fmeasure'].avg}
     for k, v in result_dict.items():
-        logger.info(f'{k}:{v}')
-    logger.info('FPS:{}'.format(total_frame / total_time))
+        logger.info(f'{k}:{v:.4f}')
+    logger.info('FPS:{:.2f}'.format(total_frame / total_time))
     return result_dict
 
 
@@ -202,11 +202,11 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
             net.train()  # train mode
             train_loss = 0.
             start = time.time()
+            epoch_start_time = time.time()
             for i, batch_data in enumerate(
                     train_loader):  # traverse each batch in the epoch
                 current_lr = adjust_learning_rate(
                     optimizer, base_lr, epoch, train_options['epochs'], 0.9)
-                current_lr = float('%.7f' % current_lr)
                 # 数据进行转换和丢到gpu
                 for key, value in batch_data.items():
                     if value is not None:
@@ -231,12 +231,14 @@ def train(net, optimizer, loss_func, train_loader, eval_loader, to_use_device,
                     interval_batch_time = time.time() - start
                     logger.info(f"[{epoch}/{train_options['epochs']}] - "
                                 f"[{i + 1}/{all_step}] - "
-                                f"lr:{current_lr} - "
+                                f"lr:{current_lr:.7f} - "
                                 f"{loss_str} - "
-                                f"time:{interval_batch_time:.4f}")
+                                f"time:{interval_batch_time:.4f}s")
                     start = time.time()
-
-            logger.info(f'train_loss: {train_loss / len(train_loader)}')
+            epoch_time = time.time() - epoch_start_time
+            logger.info(f'epoch_time: {epoch_time:.4f}s')
+            avg_loss = train_loss / len(train_loader)
+            logger.info(f'train_loss: {avg_loss:.4f}')
             if (epoch + 1) % train_options['val_interval'] == 0:
                 # val
                 eval_dict = evaluate(

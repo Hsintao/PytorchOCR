@@ -27,7 +27,7 @@ config = Dict()
 config.exp_name = 'DBNet'
 config.train_options = {
     # for train
-    'resume_from': '',  # 继续训练地址
+    'resume_from': f'./output/{config.exp_name}/checkpoint/latest.pth',  # 继续训练地址
     'third_party_name': '',  # 加载paddle模型可选
     # 模型保存地址，log文件也保存在这里
     'checkpoint_save_dir': f"./output/{config.exp_name}/checkpoint",
@@ -78,7 +78,7 @@ config.dataset = {
         'dataset': {
             'type': 'TextDataset',
             'data_root': r'/home/wk/xintao/DB/datasets/total_text/train_images',
-            #/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/
+            # /Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
