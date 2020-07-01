@@ -219,7 +219,7 @@ class TextDataset(Dataset):
         #     return self.__getitem__(np.random.randint(self.__len__()))
 
     def __len__(self):
-        return 10 # len(self.data_list)
+        return 20 # len(self.data_list)
 
 
 if __name__ == '__main__':
