@@ -79,15 +79,25 @@ if __name__ == '__main__':
     import cv2
     from matplotlib import pyplot as plt
     from torchocr.utils import draw_ocr_box_txt, draw_bbox
-
+    from tqdm import tqdm
+    import shutil
+    shutil.rmtree("test_result", ignore_errors=True)
     args = init_args()
-    img = cv2.imread(args.img_path)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+
     model = DetInfer(args.model_path)
     tic = time.time()
-    box_list, score_list = model.predict(img, is_output_polygon=False)
-    print(f'infer single image in {(time.time() - tic):.4f}s')
-    # img = draw_ocr_box_txt(img, box_list)
-    img = draw_bbox(img, box_list)
-    cv2.imwrite(filename='imgs/result_det.jpg', img=img)
+    for name in tqdm(os.listdir(args.img_path)):
+        img_path = os.path.join(args.img_path, name)
+        img = cv2.imread(img_path)
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        box_list, score_list = model.predict(img, is_output_polygon=False)
+
+        # img = draw_ocr_box_txt(img, box_list)
+        img = draw_bbox(img, box_list)
+
+        os.makedirs('test_result', exist_ok=True)
+        # cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+        img = img[:, :, ::-1]
+        cv2.imwrite(filename=f'test_result/result_{name}', img=img)
+    print(f'avg infer image in {(time.time() - tic)/len(os.listdir(args.img_path)):.4f}s')
     # plt.show()
