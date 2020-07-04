@@ -25,7 +25,6 @@ from torchocr.utils import get_logger, weight_init, load_checkpoint, save_checkp
 from torchocr.metrics import DetMetric
 
 
-
 def parse_args():
     import argparse
     parser = argparse.ArgumentParser(description='train')

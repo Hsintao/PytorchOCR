@@ -24,10 +24,10 @@
 from addict import Dict
 
 config = Dict()
-config.exp_name = 'DBNet'
+config.exp_name = 'DBNet_SGD_LR1e-4_SIZE1024'
 config.train_options = {
     # for train
-    'resume_from': f'./output/{config.exp_name}/checkpoint/latest.pth',  # 继续训练地址
+    'resume_from': f'',  # 继续训练地址
     'third_party_name': '',  # 加载paddle模型可选
     # 模型保存地址，log文件也保存在这里
     'checkpoint_save_dir': f"./output/{config.exp_name}/checkpoint",
@@ -41,10 +41,11 @@ config.train_options = {
     'ckpt_save_epoch': 10,  # epoch为单位, 只有ckpt_save_type选择FixedEpochStep时，该参数才有效
 }
 
-config.SEED = 927
+config.SEED = 1024
 config.optimizer = {
-    'type': 'Adam',
-    'lr': 0.002,
+    'type': 'SGD',
+    'lr': 0.007,
+    'momentum': 0.9,
     'weight_decay': 1e-4,
 }
 
@@ -77,7 +78,7 @@ config.dataset = {
     'train': {
         'dataset': {
             'type': 'TextDataset',
-            'data_root': r'/home/wk/xintao/DB/datasets/total_text/train_images',
+            'data_root': r'/home/wk/xintao/DB/datasets/train_val/train_images',
             # /Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/total_text/
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
@@ -88,7 +89,7 @@ config.dataset = {
                                                                   'rotate': [-10, 10]}},
                                                               {'type': 'Resize', 'args': {'size': [0.5, 3]}}]},
                                {'type': 'EastRandomCropData', 'args': {
-                                   'size': [640, 640], 'max_tries': 50, 'keep_ratio':True}},
+                                   'size': [1024, 1024], 'max_tries': 50, 'keep_ratio':True}},
                               {'type': 'MakeBorderMap', 'args': {
                                   'shrink_ratio': 0.4, 'thresh_min': 0.3, 'thresh_max': 0.7}},
                               {'type': 'MakeShrinkMap', 'args': {'shrink_ratio': 0.4, 'min_text_size': 8}}],
@@ -99,7 +100,7 @@ config.dataset = {
         },
         'loader': {
             'type': 'DataLoader',  # 使用torch dataloader只需要改为 DataLoader
-            'batch_size': 4,
+            'batch_size': 2,
             'shuffle': True,
             'num_workers': 4,
             'collate_fn': {
@@ -110,7 +111,7 @@ config.dataset = {
     'eval': {
         'dataset': {
             'type': 'TextDataset',
-            'data_root': '/home/wk/xintao/DB/datasets/total_text/test_images',
+            'data_root': '/home/wk/xintao/DB/datasets/train_val/test_images',
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
