@@ -84,6 +84,8 @@ def init_args():
 
 
 def rotation_point(img, angle=90, point=None):
+    print(point.shape)
+    # point.shape  (N,2)
     cols = img.shape[1]  # w
     rows = img.shape[0]  # h
     M = cv2.getRotationMatrix2D((cols / 2, rows / 2), angle, 1)
@@ -125,8 +127,6 @@ def rotation_point(img, angle=90, point=None):
 
 def py_cpu_pnms(bboxs, scores, thresh):
     # 获取检测坐标点及对应的得分
-
-    # 这里文本的标注采用14个点，这里获取的是这14个点的偏移
 
     pts = bboxs
 
