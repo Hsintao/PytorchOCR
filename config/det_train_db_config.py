@@ -115,7 +115,7 @@ config.dataset = {
             'file': r'',
             'mean': [0.485, 0.456, 0.406],
             'std': [0.229, 0.224, 0.225],
-            'pre_processes': [{'type': 'ResizeShortSize', 'args': {'short_size': 736, 'resize_text_polys': False}}],
+            'pre_processes': [{'type': 'ResizeShortSize', 'args': {'short_size': 1024, 'resize_text_polys': False}}],
             'filter_keys': [],  # 需要从data_dict里过滤掉的key
             'ignore_tags': ['*', '###'],
             'img_mode': 'RGB'
