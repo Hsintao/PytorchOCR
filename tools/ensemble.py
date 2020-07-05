@@ -88,10 +88,13 @@ img_dir = '/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛�
 img1_dir = '/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/测试集/image1'
 img2_dir = '/Volumes/WDSSD/文本检测/自然场景文字检测挑战赛初赛数据/测试集/image2'
 img_names = os.listdir(img_dir)
-img_result_dir = '/Users/xintao/Desktop/ensemble_result/test_results'
-img1_result_dir = '/Users/xintao/Desktop/ensemble_result/test_results1/'
-img2_result_dir = '/Users/xintao/Desktop/ensemble_result/test_results2/'
-final_result_dir = '/Users/xintao/Desktop/ensemble_result/final_result/'
+
+img_result_dir = '/Users/xintao/Desktop/3/test_results'
+img1_result_dir = '/Users/xintao/Desktop/3/test_results1/'
+img2_result_dir = '/Users/xintao/Desktop/3/test_results2/'
+final_result_dir = '/Users/xintao/Desktop/3/final_result/'
+os.makedirs(final_result_dir, exist_ok=True)
+
 for name in tqdm(img_names):
     # print(name)
     idx = name.split('.')[0].split('_')[-1]
